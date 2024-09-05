@@ -70,6 +70,7 @@ class Query(graphene.ObjectType):
     
     users = graphene.List(UserType)    
     me = graphene.Field(UserType)
+    items = graphene.List(ItemType)
 
     def resolve_me(self, info):
         user = info.context.user
@@ -82,6 +83,9 @@ class Query(graphene.ObjectType):
         # if not info.context.user.is_authenticated:
         #     raise Exception("Not authenticated!")
         return User.objects.all()
+    
+    def resolve_items(self, info):
+        return ItemType.objects.all()
 
 class VerifyToken(graphene.Mutation):
     class Arguments:

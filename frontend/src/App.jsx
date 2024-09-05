@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-// import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
-// import 'tailwindcss/tailwind.css';
+import Admin from './pages/Admin';
+import Salesman from './pages/Salesman';
 import { AUTH_TOKEN, USER } from './constants';
 
 const App = () => {
@@ -14,6 +14,7 @@ const App = () => {
     localStorage.setItem(USER, tokenAuth.user.group.name);
     setAuthToken(tokenAuth.token);
     setUser(tokenAuth.user.group.name);
+    window.location.href="/";
   };
 
   const handleLogout = () => {
@@ -21,31 +22,22 @@ const App = () => {
     localStorage.removeItem(USER);
     setAuthToken(null);
     setUser(null);
+    window.location.href="/";
   };
   
-  // // handleLogout()
-
-  
   return (
-    <div className="center w85">
-      <div className="ph3 pv1 background-gray">
-        <>Heeelo</>
-        {
-          user == null? 
-            <Login onLogin={handleLogin} />:<></>
-        }
-        {/* <Router>
-          <div className="App">
-            {
-              user == null ?
-                <Routes>
-                  <Route path="/" element={<Login onLogin={handleLogin} />}></Route>
-                </Routes> : 
-                <h1>Logged In as {user}</h1>
-            }
-
-          </div>
-        </Router> */}
+    <div>
+      <div> 
+        {(() => {
+          switch (user) {
+            case null:
+              return <Login onLogin={handleLogin} />;
+            case "admin":
+              return <Admin onLogout={handleLogout} />;
+            case "salesman":
+              return <Salesman onLogout={handleLogout} />;
+          }
+        })()}
       </div>
     </div>
   );

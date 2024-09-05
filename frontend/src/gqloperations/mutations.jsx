@@ -1,6 +1,34 @@
 import { gql } from "@apollo/client";
 
-export const CREATE_OWNER = gql`
+
+
+export const LOGIN_MUTATION = gql`
+  mutation tokenAuth($email: String!, $password: String!) {
+    tokenAuth(email: $email, password: $password) {
+      token
+      user{
+        email
+        group{
+          name
+        }
+      }
+    }
+  }
+`;
+
+export const NEW_ITEM_MUTATION = gql`
+mutation newitem ($name: String!, $price: Int!) {
+  addNew(name: $name, price: $price) {
+    item {
+      stock
+      price
+      addTime
+      name
+    }
+  }
+}
+`;
+export const NEW_SALESMAN_MUTATION = gql`
 mutation createOwner(
   $email: String!
   $username: String! 
@@ -20,45 +48,6 @@ mutation createOwner(
         email
         dateJoined
       }
-    }
-  }
-`;
-
-export const LOGIN_MUTATION = gql`
-  mutation tokenAuth($email: String!, $password: String!) {
-    tokenAuth(email: $email, password: $password) {
-      token
-      user{
-        email
-        group{
-          name
-        }
-      }
-    }
-  }
-`;
-
-export const CREATE_ADMIN = gql`
-mutation createAdmin(
-  $email: String!
-  $username: String! 
-  $password1: String! 
-  $password2: String!,
-  $business: ID!
-) {
-  createAdmin(
-    email: $email,
-    username: $username,
-    password1: $password1,
-    password2: $password2,
-    business: $business
-    ) {
-    user{
-      id
-      username
-      email
-      dateJoined
-    }
     }
   }
 `;

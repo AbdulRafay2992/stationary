@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { LOGIN_MUTATION } from "../gqloperations/mutations.jsx";
+import client from "../apolloClient.js";
 
 const Login = ({ onLogin }) => {
 
@@ -8,9 +9,10 @@ const Login = ({ onLogin }) => {
     email: '',
     password: ''
   });
+  
 
   const [login, { loading, error }] = useMutation(LOGIN_MUTATION, {
-
+      client: client,
       variables: {
       email: formState.email,
       password: formState.password,
@@ -20,82 +22,75 @@ const Login = ({ onLogin }) => {
     onCompleted: ( data ) => {
       console.log('Login Response:', data);
       onLogin(data.tokenAuth);
-      window.location.href="/";
     },
     onError: (error) => {
-      console.log('errroor')
       console.error('Login error:', error);
     },
   });
 
 
 
-  // const handleLogin = async (email, password) => {
-  //   try {
-  //     await login({ variables: { email, password } }); 
+  const handleLogin = async (email, password) => {
+    try {
+      await login({ variables: { email, password } }); 
 
-  //   } catch (error) {
-  //     console.error('Login error:', error);
-  //   }
-  // };
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
 
-  return(
-    <h1>Login</h1>
-  )
-  // return (
-  //   <div className="flex flex-col items-center justify-center">
-  //     {" "}
-  //     <h4 className="mt-24 mb-5 text-blue-600 font-bold">
-  //       Login
-  //     </h4>
-  //     <form 
-  //       onSubmit={(event) => {
-  //         event.preventDefault();
-  //         handleLogin(formState.email, formState.password);
-  //       }}
-  //       className="w-full max-w-xs"
-  //     >
-  //       <div className="flex flex-col w-full">
-  //         <input
-  //           value={formState.email}
-  //           onChange={(e) =>
-  //             setFormState({
-  //               ...formState,
-  //               email: e.target.value,
-  //             })
-  //           }
-  //           type="text"
-  //           placeholder="Your email address"
-  //           className="mb-3 border-2 border-blue-600 rounded-lg p-2"
-  //           autoComplete="username"
-  //         />
-  //         <input
-  //           value={formState.password}
-  //           onChange={(e) =>
-  //             setFormState({
-  //               ...formState,
-  //               password: e.target.value,
-  //             })
-  //           }
-  //           type="password"
-  //           placeholder={
-  //             formState.login ? "password" : "Choose a safe password"
-  //           }
-  //           className="mb-3 border-2 border-blue-600 rounded-lg p-2"
-  //           autoComplete="current-password"
-  //         />
-  //       </div>
-  //       <div className="flex mt-3">
-  //         <button
-  //           type="submit"
-  //           className="flex-grow mr-4 px-4 py-2 bg-blue-500 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg"
-  //         >
-  //           Login
-  //         </button>
-  //       </div>
-  //     </form>
-  //   </div>
-  // );
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleLogin(formState.email, formState.password);
+        }}
+        className="bg-orange rounded-lg shadow-2xl p-6"
+      >
+        <h2 className="text-2xl font-bold text-gray-600 mb-4">Login</h2>
+        <div className="mb-4">
+          <input
+            value={formState.email}
+            onChange={(e) =>
+              setFormState({
+                ...formState,
+                email: e.target.value,
+              })
+            }
+            type="text"
+            placeholder="Your email address"
+            autoComplete="username"
+            className="w-3/4 p-2 pl-10 text-sm text-gray-700 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+          />
+        </div>
+        <div className="mb-4">
+          <input
+            value={formState.password}
+            onChange={(e) =>
+              setFormState({
+                ...formState,
+                password: e.target.value,
+              })
+            }
+            type="password"
+            placeholder={
+              formState.login ? "password" : "Choose a safe password"
+            }
+            autoComplete="current-password"
+            className="w-3/4 p-2 pl-10 text-sm text-gray-700 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+        >
+          Login
+        </button>
+      </form>
+    </div>
+  );
 };
 
 export default Login;
