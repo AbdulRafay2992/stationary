@@ -179,6 +179,10 @@ STATIC_ROOT = (
 STATIC_URL = "/static/"
 # This sets the location where Django will collect and store static files when you run the collectstatic management command.
 
+MEDIA_URL = "media/"  # the base URL at which the media files will be accessible from the web browser
+MEDIA_ROOT = (
+    os.path.join(BASE_DIR, "media")
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -9,6 +9,7 @@ class Item(models.Model):
     price = models.PositiveSmallIntegerField()
     stock = models.PositiveSmallIntegerField()
     add_time = models.DateTimeField(auto_now_add=True)
+    image = models.CharField(max_length=60)
 
 class OrderItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.PROTECT, related_name="order_item")
@@ -41,6 +42,9 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+class UserDetail(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    password = models.CharField(max_length=50)
 
 #TASKS
 class Task(models.Model):

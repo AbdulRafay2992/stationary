@@ -16,6 +16,7 @@ class JwtTokenMiddleware(JSONWebTokenMiddleware):
             # Check if the request includes a JWT token in the headers
             token = request.headers.get('Authorization', '').split(' ')[1] if 'Authorization' in request.headers else None
             operation_name = info.operation.name.value if info.operation.name else None
+            print(operation_name)
             if token != "null" and token is not None:
                 user = self.get_user(info,token)
                 if GroupTaskPermission.objects.get(group=user.group_id, task=Task.objects.get(name = operation_name)):

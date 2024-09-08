@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, Outlet } from 'react-router-dom';
-import SalesmanList from '../pages/SalesmanList';
-import ItemList from './ItemList';
-import AddItem from './AddItem';
-import AddSalesman from '../pages/AddSalesman';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import NewOrder from './NewOrder';
 
-const Admin = ({ onLogout }) => {
-  const [activeMenu, setActiveMenu] = useState('list-items');
+const Salesman = ({ onLogout }) => {
+  const [activeMenu, setActiveMenu] = useState('new-order');
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
@@ -15,16 +12,16 @@ const Admin = ({ onLogout }) => {
   return (
     <Router>
       <div className="flex justify-between items-center h-16 bg-gray-800 text-white px-4">
-        <h1>Admin</h1>
+        <h1>Sales</h1>
         <div className="p-4">
           <NavLink
-            to="/items"
-            className={`cursor-pointer mb-2 p-2 ${activeMenu === 'list-items' ? 'bg-gray-400' : ''}`}
-            onClick={() => handleMenuClick('list-items')}
+            to="/new-order"
+            className={`cursor-pointer mb-2 p-2 ${activeMenu === 'new-order' ? 'bg-gray-400' : ''}`}
+            onClick={() => handleMenuClick('new-order')}
           >
-            Items
+            New Order
           </NavLink>
-          <NavLink
+          {/* <NavLink
             to="/new-item"
             className={`cursor-pointer mb-2 p-2 ${activeMenu === 'new-item' ? 'bg-gray-400' : ''}`}
             onClick={() => handleMenuClick('new-item')}
@@ -44,7 +41,7 @@ const Admin = ({ onLogout }) => {
             onClick={() => handleMenuClick('new-salesman')}
           >
             New Salesman
-          </NavLink>
+          </NavLink> */}
         </div>
         <button
           onClick={onLogout}
@@ -56,11 +53,11 @@ const Admin = ({ onLogout }) => {
       <div className="flex justify-center">
         <div className="w-full p-4">
           <Routes>
-            <Route path="/" element={<ItemList />} />
-            <Route path="/items" element={<ItemList />} />
-            <Route path="/new-item" element={<AddItem />} />
-            <Route path="/salesman" element={<SalesmanList />} />
-            <Route path="/new-salesman" element={<AddSalesman />} />
+            <Route path="/" element={<NewOrder />} />
+            <Route path="/new-order" element={<NewOrder />} />
+            {/* <Route path="/new-item" element={<AddItem />} />
+            <Route path="/salesman" element={<SalesmanList />} /> */}
+            {/* <Route path="/new-salesman" element={<AddSalesman />} /> */}
           </Routes>
         </div>
       </div>
@@ -69,4 +66,4 @@ const Admin = ({ onLogout }) => {
   );
 };
 
-export default Admin;
+export default Salesman;

@@ -1,0 +1,15 @@
+NPM
+npm install apollo-upload-client
+
+
+PIP
+pip install django graphene graphene-django graphene-file-upload
+
+
+#SET 
+fetch('http://localhost:8000/image/', request) to fetch('/image/', request) in ProductList.jsx
+
+#SET
+path("image/", csrf_exempt(views.product_image)) TO    path("image/", views.product_image), IN urls.py
+
+#SET

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
-import Salesman from './pages/Salesman';
 import { AUTH_TOKEN, USER } from './constants';
+import Salesman from './pages/Salesman';
 
 const App = () => {
   
@@ -10,6 +10,10 @@ const App = () => {
   const [user, setUser] = useState(localStorage.getItem(USER));
 
   const handleLogin = (tokenAuth) => {
+    console.log(tokenAuth.user.group.name);
+    console.log(tokenAuth.token);
+    
+    
     localStorage.setItem(AUTH_TOKEN, tokenAuth.token);
     localStorage.setItem(USER, tokenAuth.user.group.name);
     setAuthToken(tokenAuth.token);

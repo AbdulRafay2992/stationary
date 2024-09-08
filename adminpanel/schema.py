@@ -7,6 +7,7 @@ from graphql import GraphQLError
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 import time, os
+from django.db import transaction
 
 User = get_user_model()
 
@@ -58,6 +59,10 @@ class UserType(DjangoObjectType):
     class Meta:
          model = User
 
+class UserDetailType(DjangoObjectType):
+    class Meta:
+        model = UserDetail
+
 class ItemType(DjangoObjectType):
     class Meta:
         model = Item
@@ -70,7 +75,8 @@ class Query(graphene.ObjectType):
     
     users = graphene.List(UserType)    
     me = graphene.Field(UserType)
-    items = graphene.List(ItemType)
+    items = graphene.List(ItemType, query=graphene.String())
+    salesmen = graphene.List(UserDetailType)
 
     def resolve_me(self, info):
         user = info.context.user
@@ -84,8 +90,14 @@ class Query(graphene.ObjectType):
         #     raise Exception("Not authenticated!")
         return User.objects.all()
     
-    def resolve_items(self, info):
-        return ItemType.objects.all()
+    def resolve_items(self, info, query=None):
+        if query:
+            return Item.objects.filter(name__icontains=query)
+        return Item.objects.all()
+    
+    def resolve_salesmen(self, info):
+        salesmen = User.objects.filter(group__name='salesman')
+        return [user.userdetail for user in salesmen]
 
 class VerifyToken(graphene.Mutation):
     class Arguments:
@@ -135,29 +147,81 @@ class NewItem(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         price = graphene.String(required=True)
+        image = graphene.String(required=True)
 
     item = graphene.Field(ItemType)
 
     @classmethod
-    def mutate(cls, root, info, name, price):
+    def mutate(cls, root, info, name, price,image):
         user = info.context.user
         if user.group.name == "admin":
-            item=Item(name=name,price=price, stock=0,add_time=time.time())
+            item=Item(name=name,price=price, stock=0,image=image,add_time=time.time())
             item.save()
-            print("Item saved")
+            print("Item saved")            
+            return NewItem(item=item)
+        
+class DelItem(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int(required=True)
 
-            image_name = name + '.jpg'
-            image_path = os.path.join('static', 'itemsimages', image_name)
-            print(image_path)
+    done = graphene.Field(graphene.Boolean)
 
-            # Save the image file
-            with open(image_path, 'wb') as f:
-                # For demonstration purposes, we'll create a simple image file
-                # In a real-world scenario, you would replace this with your actual image data
-                f.write(b'Image data')
-                print("Image saved")
-            
-            return cls(item=item)
+    @classmethod
+    def mutate(cls, root, info, id):
+        user = info.context.user
+        if user.group.name == "admin":
+            try:
+                item = Item.objects.get(id=id)
+                media_path = settings.MEDIA_ROOT
+                # Get the path to the image file
+                image_path = os.path.join(media_path, item.image)
+                # Check if the file exists
+                if os.path.exists(image_path):
+                    # Delete the file
+                    os.remove(image_path)
+                
+                item.delete()
+                return DelItem(done=True)
+            except Item.DoesNotExist:
+                return DelItem(done=False)
+        
+# adminpanel/schema.py
+
+class NewSalesman(graphene.Mutation):
+    class Arguments:
+        username = graphene.String(required=True)
+        password = graphene.String(required=True)
+
+    user = graphene.Field(UserDetailType)
+
+    @transaction.atomic
+    def mutate(self, info, username, password):
+        user = User(username=username,email=username, is_superuser=False, group=UserGroup.objects.get(name='salesman'))
+        user.set_password(password)
+        user.save()
+        user=UserDetail(user=user,password=password)
+        user.save()
+        print("User saved")
+        return NewSalesman(user=user)
+    
+class DelSalesman(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int(required=True)
+
+    done = graphene.Field(graphene.Boolean)
+
+    @classmethod
+    def mutate(cls, root, info, id):
+        user = info.context.user
+        if user.group.name == "admin":
+            try:
+                salesman = User.objects.get(id=id)
+                salesman1 = UserDetail.objects.get(user=salesman)
+                salesman1.delete()
+                salesman.delete()
+                return DelSalesman(done=True)
+            except Item.DoesNotExist:
+                return DelSalesman(done=False)
     
 class Mutation(graphene.ObjectType):
 
@@ -165,7 +229,11 @@ class Mutation(graphene.ObjectType):
     verify_token = VerifyToken.Field(description="Verify a JWT token")
     refresh_token = RefreshToken.Field(description="Refresh a JWT token")
 
-    add_new = NewItem.Field()
+    new_item = NewItem.Field()
+    del_item = DelItem.Field()
+
+    new_salesman = NewSalesman.Field()
+    del_salesman = DelSalesman.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

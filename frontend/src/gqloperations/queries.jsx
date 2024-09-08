@@ -1,26 +1,5 @@
 import { gql } from "@apollo/client";
 
-export const GET_ADMINS = gql`
-query admins($business: ID!)  {
-  admins(business: $business) {
-    id
-    user {
-      username
-      email
-    }
-  }
-}
-`;
-
-export const GET_USERS = gql`
-  query users{
-    users{
-        id
-        username
-    }
-  }
-`;
-
 export const GET_ME = gql`
   query me {
     me {
@@ -33,56 +12,27 @@ export const GET_ME = gql`
   }
 `;
 
-export const GET_BUSINESSES = gql`
-  query businesses {
-    businesses {
-      id
-      name
-      businessType
-    }
-  }
-`;
-
-export const GET_BUSINESS_TYPES = gql`
-  query businessTypes{
-    businessTypes
-  }
-`;
-
-export const GET_CATEGORIES = gql`
-query accountCategory($head: ID) {
-  accountCategory (head:$head){
+export const GET_ITEMS = gql`
+query items($query: String) {
+  items(query: $query) {
     id
     name
+    price
+    stock
+    addTime
+    image
   }
 }
 `;
-export const GET_CHART_OF_ACCOUNTS = gql`
-query chartOfAccounts($business:ID) {
-  chartOfAccounts(business: $business) {
-    id
-    accountName
-    accountHead {
-      id
-      name
-      typeName
+
+export const GET_SALESMEN = gql`
+  query salesmen{
+    salesmen {
+      user{
+        id
+        username
+      }
+      password
     }
-    accountCategory {
-      id
-      name
-    }
-    business {
-      name
-    }
-  }
-  accountHeadCategories {
-    id
-    name
-    typeName
-    categories {
-      id
-      name
-    }
-  }
 }
 `;

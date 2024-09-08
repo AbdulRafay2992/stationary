@@ -17,136 +17,44 @@ export const LOGIN_MUTATION = gql`
 `;
 
 export const NEW_ITEM_MUTATION = gql`
-mutation newitem ($name: String!, $price: Int!) {
-  addNew(name: $name, price: $price) {
+mutation newItem ($name: String!, $price: String!, $image: String!) {
+  newItem(name: $name, price: $price, image: $image) {
     item {
-      stock
+      name
       price
-      addTime
-      name
+      image
     }
   }
 }
 `;
+export const DEL_ITEM_MUTATION = gql`
+mutation delItem ($id: Int!) {
+  delItem(id: $id) {
+    done
+  }
+}`;
+
 export const NEW_SALESMAN_MUTATION = gql`
-mutation createOwner(
-  $email: String!
+mutation newSalesman(
   $username: String! 
-  $password1: String! 
-  $password2: String!
+  $password: String!
 ) {
-  createOwner(
-    email: $email,
+  newSalesman(
     username: $username,
-    password1: $password1,
-    password2: $password2
+    password: $password,
     ) {
-      token
-      user{
-        id
-        username
-        email
-        dateJoined
-      }
-    }
-  }
-`;
-
-export const UPDATE_ADMIN = gql`
-  mutation updateAdmin(
-    $admin: ID!
-    $email: String!
-    $username: String! 
-    $password: String!
-  ) {
-    updateAdmin(
-      admin: $admin,
-      email: $email,
-      username: $username,
-      password: $password
-      ) {
-        user{
-          id
+      user {
+        password
+        user {
           username
-          email
-          dateJoined
         }
       }
-    }
-`;
-
-export const DELETE_ADMIN = gql`
-  mutation deleteAdmin(
-    $business: ID!
-    $admin: ID!
-  ) {
-    deleteAdmin(
-      business: $business,
-      admin: $admin,
-      ) {
-        done
-      }
-    }
-`;
-
-export const CREATE_BUSINESS = gql`
-  mutation createBusiness($name: String!, $businessType: String!) {
-    createBusiness(name: $name, businessType: $businessType) {
-      id
-      name
-      businessType
-    }
-  }
-`;
-
-export const UPDATE_BUSINESS = gql`
-  mutation updateBusiness($id: ID!, $name: String!, $businessType: String!) {
-    updateBusiness(id: $id, name: $name, businessType: $businessType) {
-      success
-      business {
-        id
-        name
-        businessType
-      }
-    }
-  }
-`;
-
-export const DELETE_BUSINESS = gql`
-  mutation deleteBusiness($id: ID!) {
-    deleteBusiness(id: $id) {
-      success
-    }
-  }
-`;
-
-export const CREATE_ACCOUNT_CHART = gql`
-    mutation createChartOfAccount ($business:ID!,$chart:ID, $accountHead:ID!, $accountCategory: ID!, $accountName: String!){
-      createChartOfAccount(business: $business,chart:$chart, accountHead: $accountHead, accountCategory: $accountCategory accountName: $accountName){
-        chartOfAccount{
-          id
-          accountName
-          accountHead{
-            id
-            name
-            typeName
-          }
-          accountCategory{
-            id
-            name
-          }
-          business{
-            name
-          }
-        }
-      }
-    }
-  `
-
-export const DELETE_ACCOUNT_CHART = gql`
-mutation deleteChartOfAccount ($chart: ID!){
-  deleteChartOfAccount(chart:$chart){
-    result
   }
 }
 `;
+export const DEL_SALESMAN_MUTATION = gql`
+mutation delSalesman ($id: Int!) {
+  delSalesman(id: $id) {
+    done
+  }
+}`;

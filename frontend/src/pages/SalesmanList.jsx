@@ -1,71 +1,75 @@
 import React, { useState } from 'react';
-import { useMutation } from '@apollo/client';
-import { NEW_SALESMAN_MUTATION } from '../gqloperations/mutations.jsx';
+import { useMutation, useQuery } from '@apollo/client';
+import { GET_SALESMEN } from '../gqloperations/queries.jsx';
+import { DEL_SALESMAN_MUTATION, NEW_SALESMAN_MUTATION } from '../gqloperations/mutations.jsx';
 import client from "../apolloClient.js";
+import { useEffect } from 'react';
 
 const AddSalesman = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
 
-  const [addSalesman, { loading, error }] = useMutation(NEW_SALESMAN_MUTATION, {
+  const [salesmen, setSalesmen] = useState([]);
+
+  const { data, loading, error } = useQuery(GET_SALESMEN, {
     client,
-    variables: {
-      username,
-      password,
-    },
-    onCompleted: (data) => {
-      console.log('Salesman added:', data);
-      // Reset form inputs
-      setUsername('');
-      setPassword('');
-    },
-    onError: (error) => {
-      console.error('Error adding salesman:', error);
-    },
   });
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    addSalesman();
+  const [deleteSalesmanMutation] = useMutation(DEL_SALESMAN_MUTATION, { client });
+
+  useEffect(() => {
+    if (data && data.salesmen && !loading && !error) {
+      if (data.salesmen != null) {
+        setSalesmen(data.salesmen);
+      }
+    }
+  }, [data]);
+
+  const deleteSalesman = (Id) => {
+    deleteSalesmanMutation({
+      variables: { id: parseInt(Id) },
+      onCompleted: (data) => {
+        console.log('Item deleted:', data);
+        const updatedSalesmen = salesmen.filter((salesman) => salesman.user.id !== Id);
+        setSalesmen(updatedSalesmen);
+      },
+      onError: (error) => {
+        console.error('Error deleting item:', error);
+      },
+    });
   };
 
   return (
     <div>
-      <h2>Add Salesman</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-1/2 p-2 text-sm text-gray-700 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-1/2 p-2 text-sm text-gray-700 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-        >
-          Add Salesman
-        </button>
-      </form>
-
       {/* Render list of added Salesman */}
-      <div className="mt-4">
-        <h3>Added Salesman</h3>
-        <ul>
-          {/* Map through the list of added Salesman and render each one */}
-          {/* Example: <li>Salesman 1</li> */}
-        </ul>
+      <div className="mt-4 flex justify-center">
+        <table className='w-full'>
+          <thead className="bg-gray-50 border-b-2 border-gray-200">
+            <tr>
+              <th>Username</th>
+              <th>Password</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {salesmen && salesmen.length > 0 && (
+              salesmen.map((salesman) => (
+                <tr key={salesman.user.id} className="text-center py-2 border-b border-gray-200 hover:bg-gray-100">
+                  <td>
+                    <p className="text-lg font-bold">{salesman.user.username}</p>
+                  </td>
+                  <td>
+                    <p className="text-lg font-bold">{salesman.password}</p>
+                  </td>
+                  <td>
+                    <button
+                      className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded'
+                      onClick={() => deleteSalesman(salesman.user.id)}>Delete
+                    </button>
+                  </td>
+                </tr>
+              )))
+            }
+          </tbody>
+        </table>
       </div>
     </div>
   );
