@@ -10,6 +10,8 @@ staticfiles
 # C extensions
 *.so
 
+media/
+frontend/node_modules
 
 # Distribution / packaging
 .Python
