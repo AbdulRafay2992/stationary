@@ -16,6 +16,7 @@ class OrderItem(models.Model):
     quantity = models.PositiveSmallIntegerField()
     discount = models.FloatField()
     price = models.PositiveSmallIntegerField()
+    order = models.ForeignKey("Order", on_delete=models.PROTECT, related_name="order")
     
 class EditType(Enum):
     PRICE = 'price'

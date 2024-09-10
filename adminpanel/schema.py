@@ -4,10 +4,10 @@ from graphene_django.types import DjangoObjectType
 import jwt
 import graphql_jwt
 from graphql import GraphQLError
-from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-import time, os
+import time, os,math
 from django.db import transaction
+from graphene.types.json import JSONString
 
 User = get_user_model()
 
@@ -66,6 +66,14 @@ class UserDetailType(DjangoObjectType):
 class ItemType(DjangoObjectType):
     class Meta:
         model = Item
+
+class OrderItemType(DjangoObjectType):
+    class Meta:
+        model = OrderItem
+
+class OrderType(DjangoObjectType):
+    class Meta:
+        model = Order
 
 class GroupType(DjangoObjectType):
     class Meta:
@@ -222,6 +230,68 @@ class DelSalesman(graphene.Mutation):
                 return DelSalesman(done=True)
             except Item.DoesNotExist:
                 return DelSalesman(done=False)
+
+class BillItem(graphene.InputObjectType):
+    id = graphene.ID(required=True) 
+    quantity = graphene.Int(required=True)
+    discount = graphene.Int(required=True)
+
+# class BillItemInput(graphene.InputObjectType):
+#     id = graphene.Int(required=True)
+#     quantity = graphene.Int(required=True)
+#     discount = graphene.Int(required=True)
+    
+class CreateOrderMutation(graphene.Mutation):
+    class Arguments:
+        bill = graphene.List(BillItem, required=True)
+
+    bill = JSONString()
+
+    @transaction.atomic
+    def mutate(self, info, bill):
+        order = Order.objects.create(order_time=time.time(), total=0)  # Create a new Order instance
+        total_amount = 0
+        bill_data = []
+
+        for item in bill:
+            item_instance = Item.objects.get(id=item.id)
+            
+            price = item_instance.price
+            quantity = item.quantity
+            discount = item.discount
+            item_instance.stock -= quantity
+            item_instance.save()
+            
+            item_total = math.ceil(price * quantity) - ((price * quantity * discount) / 100)
+            total_amount += item_total
+
+            # Get the OrderItem instance
+            order_item = OrderItem(item_id=item.id, quantity=quantity, discount=discount, price=price,order=order)
+            order_item.save()
+
+            item_details = {
+                'name': order_item.item.name,
+                'price': price,
+                'quantity': quantity,
+                'discount': discount,
+                'total': item_total
+            }
+            bill_data.append(item_details)
+        
+        order.total = total_amount
+        order.order_time = time.time()
+        
+        bill = {
+            "total": total_amount,
+            "items": bill_data
+        }
+        print("2")
+        print(order)
+        order.save()
+
+        return CreateOrderMutation(bill=bill)
+
+
     
 class Mutation(graphene.ObjectType):
 
@@ -234,6 +304,7 @@ class Mutation(graphene.ObjectType):
 
     new_salesman = NewSalesman.Field()
     del_salesman = DelSalesman.Field()
+    create_order = CreateOrderMutation.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

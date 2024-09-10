@@ -13,3 +13,86 @@ fetch('http://localhost:8000/image/', request) to fetch('/image/', request) in P
 path("image/", csrf_exempt(views.product_image)) TO    path("image/", views.product_image), IN urls.py
 
 #SET
+
+
+const printDocument = () => {
+        const printWindow = window.open('', '', 'width=800,height=600');
+        const documentContent = `
+            <html>
+            <head>
+                <title>Print Document</title>
+                <style>
+                    @media print {
+                        body {
+                            margin: 0;
+                            padding: 0.5in;
+                            font-family: Arial, sans-serif;
+                        }
+                        .printable-document {
+                            width: 5in;
+                            margin: 0 auto;
+                            padding: 0.5in;
+                        }
+                        .printable-item {
+                            display: flex;
+                            margin-bottom: 0.5in;
+                            border-bottom: 1px solid #ccc;
+                            padding-bottom: 0.5in;
+                        }
+                        .item-info {
+                            display: flex;
+                            width: 100%;
+                        }
+                        .item-image {
+                            width: 1.5in;
+                            height: 1.5in;
+                            object-fit: cover;
+                            margin-right: 0.5in;
+                        }
+                        .item-details {
+                            flex: 1;
+                        }
+                        .item-name {
+                            font-weight: bold;
+                        }
+                        .item-price,
+                        .item-quantity,
+                        .item-discount,
+                        .item-total {
+                            margin-top: 0.25in;
+                        }
+                        @page {
+                            size: 5in auto;
+                            margin: 0;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="printable-document">
+                    <h1>Item List</h1>
+                    <ul>
+                        ${selectedItems.map(item => `
+                            <li class="printable-item">
+                                <div class="item-info">
+                                    <div class="item-details">
+                                        <div class="item-name">${item.name}</div>
+                                        <div class="item-price">Price: $${item.price}</div>
+                                        <div class="item-quantity">Quantity: ${item.quantity}</div>
+                                        <div class="item-discount">Discount: ${item.discount}%</div>
+                                        <div class="item-total">Total: $${item.total}</div>
+                                    </div>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            </body>
+            </html>
+        `;
+        printWindow.document.open();
+        printWindow.document.write(documentContent);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    };

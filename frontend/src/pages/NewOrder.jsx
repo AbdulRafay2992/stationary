@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_ITEMS } from '../gqloperations/queries.jsx';
-import { NEW_ITEM_MUTATION, DEL_ITEM_MUTATION } from '../gqloperations/mutations.jsx';
+import { CREATE_ORDER_MUTATION } from '../gqloperations/mutations.jsx';
 import client from '../apolloClient.js';
 
 const NewOrder = () => {
@@ -13,25 +13,119 @@ const NewOrder = () => {
     const [selectedItems, setSelectedItems] = useState([]);
     const suggestionsRef = useRef(null); // Ref for suggestions container
 
-    const [SumTotal, setSumTotal] = useState(0); // Initialize total state variable
-    // const SumTotal = useRef(0);
+    const [SumTotal, setSumTotal] = useState(0);
 
-    useEffect(() => {
-        // Call GetTotal whenever selectedItems or discount changes
-        GetTotal();
-    }, [selectedItems]);
 
-    const { loading, error, data, refetch } = useQuery(GET_ITEMS, {
+    const { loading, error, data } = useQuery(GET_ITEMS, {
         client,
     });
 
-    useEffect(() => {
-        if (data && data.items && !loading && !error) {
-            if (data.items != null) {
-                setItems(data.items);
+    const [createOrder] = useMutation(CREATE_ORDER_MUTATION, {
+        client,
+        variables: {
+            bill: selectedItems.map((item) => ({
+                id: parseInt(item.id),
+                quantity: item.quantity,
+                discount: item.discount
+            }))
+        },
+        onCompleted: (data) => {
+            console.log(JSON.parse(data.createOrder.bill));
+            CreateBillSlip(JSON.parse(data.createOrder.bill));
+        },
+        onError: (error) => {
+            console.error('Error adding salesman:', error);
+        },
+    });
+    const CreateBillSlip = (bill) => {
+        // Open a new window for printing
+        var printWindow = window.open('', '', 'height=500,width=800');
+    
+        // Define CSS for the receipt printer
+        let receiptStyle = `
+        <style>
+            @media print {
+                body {
+                    width: 80mm; /* Set to 80mm for standard receipt printers */
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                    font-size: 12px; /* Smaller font to fit the paper */
+                }
+    
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+    
+                th, td {
+                    padding: 5px;
+                    text-align: left;
+                    border: none; /* Remove borders for a clean receipt */
+                }
+    
+                .total-row {
+                    border-top: 2px solid black;
+                }
+    
+                /* Hide elements that should not be printed */
+                .no-print {
+                    display: none;
+                }
             }
-        }
-    }, [data, loading, error]);
+        </style>`;
+    
+        // Define the HTML template for the bill
+        let template = receiptStyle + `
+            <body>
+                <h2>Shop Name</h2>
+                <p>Date: ${new Date().toLocaleDateString()}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Discount</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+    
+        // Loop through the bill items and add them to the table
+        bill.items.forEach(item => {
+            template += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.discount}</td>
+                    <td>${item.total}</td>
+                </tr>`;
+        });
+    
+        // Add the total row
+        template += `
+                <tr class="total-row">
+                    <td colspan="4">Total</td>
+                    <td>${bill.total}</td>
+                </tr>
+            </tbody>
+        </table>
+        </body>`;
+    
+        // Write the HTML to the new window
+        printWindow.document.write(template);
+    
+        // Trigger the print dialog
+        printWindow.document.close(); // Required for IE
+        printWindow.focus(); // Required for certain browsers
+        printWindow.print();
+    
+        // Close the window after printing
+        printWindow.close();
+    }
+    
+
 
     // Filter items based on the query
     const filterSuggestions = (query) => {
@@ -43,34 +137,26 @@ const NewOrder = () => {
         );
     };
 
-    // Update suggestions when query changes
-
-    // Handle input change
     const handleInputChange = (event) => {
         setQuery(event.target.value);
     };
 
-    // Handle suggestion click
     const handleSuggestionClick = (item) => {
         if (!selectedItems.find((selectedItem) => selectedItem.id === item.id)) {
-            setSelectedItems([...selectedItems, item]);
+            setSelectedItems([...selectedItems, {
+                id: item.id,
+                image: item.image,
+                name: item.name,
+                price: item.price,
+                stock: item.stock,
+                quantity: 1,
+                discount: 0
+            }]);
             setQuery("");
             setSuggestions([]);
             setSelectedIndex(-1);
         }
     };
-    
-    const GetTotal = () => {
-        const elements = document.getElementsByClassName('item-total');
-        let sum = 0;
-        Array.from(elements).forEach(element => {
-            const text = element.innerText;
-            const number = parseInt(text);
-            sum += number;
-        });
-        setSumTotal(sum);
-    }
-
 
     const handleBlur = () => {
         setTimeout(() => {
@@ -98,9 +184,9 @@ const NewOrder = () => {
     const deleteItem = (itemId) => {
         const updatedItems = selectedItems.filter((item) => item.id !== itemId);
         setSelectedItems(updatedItems);
+        total_bill();
     };
 
-    // Scroll into view for selected item
     useEffect(() => {
         if (suggestionsRef.current && selectedIndex >= 0) {
             const items = suggestionsRef.current.querySelectorAll('li');
@@ -116,6 +202,37 @@ const NewOrder = () => {
         setSelectedIndex(-1); // Reset the selected index when suggestions change
     }, [query]);
 
+    useEffect(() => {
+        if (data && data.items && !loading && !error) {
+            if (data.items != null) {
+                setItems(data.items);
+            }
+        }
+    }, [data, loading, error]);
+
+    useEffect(() => {
+        total_bill();
+    }, [selectedItems]);
+
+    
+
+
+    const total_bill = () => {
+        const elements = document.getElementsByClassName('item-total');
+        let sum = 0;
+        Array.from(elements).forEach(element => {
+            const text = element.innerText;
+            const number = parseInt(text);
+            sum += number;
+        });
+        setSumTotal(sum);
+    }
+
+    const UpdateBill = (item_id, quantity, discount) => {
+        selectedItems.find((item) => item.id === item_id).quantity = quantity;
+        selectedItems.find((item) => item.id === item_id).discount = discount;
+        total_bill();
+    }
 
     return (
         <div className="flex flex-wrap">
@@ -150,19 +267,19 @@ const NewOrder = () => {
             <div className='md:w-1/2 w-full p-2'>
                 <button
                     className='ml-2 bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-4 rounded'
-                    onClick={() => refetch()}
+                    onClick={createOrder}
                 >Create Bill</button>
                 <span className='text-xl font-bold ml-2'>{SumTotal}</span>
                 {selectedItems.length > 0 && (
                     <ul
-                        className="z-10 mt-1 w-full border border-gray-300 bg-white shadow-lg rounded-lg"
+                        className=" z-10 mt-1 w-full border border-gray-300 bg-white shadow-lg rounded-lg"
                     >
                         {selectedItems.map((item, index) => (
                             <li
                                 key={item.id}
                                 className={`flex flex-wrap bg-gray-200 p-2`}
                             >
-                                <Item item={item} deleteItem={deleteItem} GetTotal={GetTotal} />
+                                <Item item={item} deleteItem={deleteItem} UpdateBill={UpdateBill} />
                             </li>
                         ))}
                     </ul>
@@ -173,26 +290,30 @@ const NewOrder = () => {
     );
 };
 
-const Item = ({ item, deleteItem, GetTotal }) => {
+const Item = ({ item, deleteItem, UpdateBill }) => {
     const [Quantity, setQuantity] = useState(1);
     const [Discount, setDiscount] = useState(0);
+    const [Stock, setStock] = useState(item.stock - 1);
     const [total, setTotal] = useState(parseInt(item.price) * Quantity);
 
     useEffect(() => {
-        let t=(item.price) * Quantity;
-        setTotal(parseInt(t-(Discount / 100) *t));
+        let t = (item.price) * Quantity;
+        setTotal(parseInt(t - (Discount / 100) * t));
     }, [Quantity, Discount]);
 
     useEffect(() => {
-        GetTotal();
-    },[total]);
+        UpdateBill(item.id, Quantity, Discount);
+    }, [total]);
 
     const handleQuantityChange = (e) => {
         let quantity = parseInt(e.target.value)
         if (quantity > 0) {
-            setQuantity(quantity);
-            let t = parseInt(item.price) * quantity;
-            setTotal(parseInt(t - (Discount / 100) * t));
+            if (item.stock >= quantity) {
+                setQuantity(quantity);
+                setStock(item.stock - quantity);
+                let t = parseInt(item.price) * quantity;
+                setTotal(parseInt(t - (Discount / 100) * t));
+            }
         }
     };
 
@@ -218,6 +339,7 @@ const Item = ({ item, deleteItem, GetTotal }) => {
                 <div className='flex flex-1 mb-4'>{item.name}</div>
                 <div className='flex space-x-2'>
                     <span className='text-xl'>{item.price}</span>
+                    <span className='text-xl'>{Stock}</span>
                     <input value={Quantity} onChange={handleQuantityChange} type="number" placeholder='Quantity' className="p-2 w-full text-sm text-gray-700 rounded-lg border border-gray-300 focus:outline-none focus:ring-4 border-gray-600" />
                     <input value={Discount} onChange={handleDiscountChange} type="number" placeholder='Discount' className="p-2 w-full text-sm text-gray-700 rounded-lg border border-gray-300 focus:outline-none focus:ring-4 border-gray-600" />
                     <span className='item-total text-xl text-green-500'>{total}</span>

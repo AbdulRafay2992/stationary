@@ -58,3 +58,25 @@ mutation delSalesman ($id: Int!) {
     done
   }
 }`;
+export const ItemInput = gql`
+  input ItemInput {
+    id: Int!
+    quantity: Int!
+    discount: Int!
+  }
+`;
+export const BillItem = gql`
+  input BillItem {
+      id: Int!
+      quantity: Int!
+      discount: Int!
+    }
+`;
+
+export const CREATE_ORDER_MUTATION = gql`
+  mutation createOrder($bill: [BillItem!]!) {
+    createOrder(bill: $bill) {
+      bill
+    }
+  }
+`;
