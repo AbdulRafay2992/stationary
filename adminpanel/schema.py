@@ -262,7 +262,7 @@ class CreateOrderMutation(graphene.Mutation):
             item_instance.stock -= quantity
             item_instance.save()
             
-            item_total = math.ceil(price * quantity) - ((price * quantity * discount) / 100)
+            item_total = math.ceil((price * quantity) - ((price * quantity * discount) / 100))
             total_amount += item_total
 
             # Get the OrderItem instance

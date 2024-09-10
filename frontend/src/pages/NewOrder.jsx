@@ -123,6 +123,7 @@ const NewOrder = () => {
     
         // Close the window after printing
         printWindow.close();
+        setSelectedItems([]);
     }
     
 
