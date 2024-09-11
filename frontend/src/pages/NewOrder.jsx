@@ -77,8 +77,8 @@ const NewOrder = () => {
         // Define the HTML template for the bill
         let template = receiptStyle + `
             <body>
-                <h2>Shop Name</h2>
-                <p>Date: ${new Date().toLocaleDateString()}</p>
+                <h2>Raheel Stationers</h2>
+                <p>OrderID: ${bill.order_time_id}</p>
                 <table>
                     <thead>
                         <tr>

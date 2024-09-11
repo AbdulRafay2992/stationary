@@ -170,7 +170,7 @@ class NewItem(graphene.Mutation):
         
 class DelItem(graphene.Mutation):
     class Arguments:
-        id = graphene.Int(required=True)
+        id = graphene.ID(required=True)
 
     done = graphene.Field(graphene.Boolean)
 
@@ -190,7 +190,7 @@ class DelItem(graphene.Mutation):
                 
                 item.delete()
                 return DelItem(done=True)
-            except Item.DoesNotExist:
+            except Exception:
                 return DelItem(done=False)
         
 # adminpanel/schema.py
@@ -235,11 +235,6 @@ class BillItem(graphene.InputObjectType):
     id = graphene.ID(required=True) 
     quantity = graphene.Int(required=True)
     discount = graphene.Int(required=True)
-
-# class BillItemInput(graphene.InputObjectType):
-#     id = graphene.Int(required=True)
-#     quantity = graphene.Int(required=True)
-#     discount = graphene.Int(required=True)
     
 class CreateOrderMutation(graphene.Mutation):
     class Arguments:
@@ -282,15 +277,56 @@ class CreateOrderMutation(graphene.Mutation):
         order.order_time = time.time()
         
         bill = {
+            "order_time_id": order.order_time,
             "total": total_amount,
             "items": bill_data
         }
-        print("2")
-        print(order)
         order.save()
 
         return CreateOrderMutation(bill=bill)
 
+class UpdateItemPrice(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+        price = graphene.Int()
+
+    item = graphene.Field(ItemType)
+    
+    @transaction.atomic
+    def mutate(self, info, id, price):
+        item = Item.objects.get(id=id)
+        if item.price != price:
+            edit = Edit(
+                item=item,
+                edit_time=time.time(),
+                edit_type="price",
+                value=item.price
+            )
+            item.price = price
+            edit.save()
+            item.save()
+            return UpdateItemPrice(item=item)
+
+class UpdateItemStock(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+        stock = graphene.Int()
+
+    item = graphene.Field(ItemType)
+
+    def mutate(self, info, id, stock):
+        item = Item.objects.get(id=id)
+        if stock != item.stock:
+            edit = Edit(
+                item=item,
+                edit_time=time.time(),
+                edit_type="stock",
+                value=item.stock
+            )
+            item.stock = stock
+            edit.save()
+            item.save()
+            return UpdateItemStock(item=item)
 
     
 class Mutation(graphene.ObjectType):
@@ -305,6 +341,9 @@ class Mutation(graphene.ObjectType):
     new_salesman = NewSalesman.Field()
     del_salesman = DelSalesman.Field()
     create_order = CreateOrderMutation.Field()
+
+    update_item_price = UpdateItemPrice.Field()
+    update_item_stock = UpdateItemStock.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

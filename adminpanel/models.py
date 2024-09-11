@@ -29,7 +29,7 @@ class Edit(models.Model):
     value = models.PositiveSmallIntegerField()
 
 class Order(models.Model):
-    order_time = models.PositiveIntegerField()
+    order_time = models.PositiveIntegerField(unique=True)
     total = models.PositiveSmallIntegerField()
 
 #USERS

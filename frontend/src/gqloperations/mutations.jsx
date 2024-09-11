@@ -28,7 +28,7 @@ mutation newItem ($name: String!, $price: String!, $image: String!) {
 }
 `;
 export const DEL_ITEM_MUTATION = gql`
-mutation delItem ($id: Int!) {
+mutation delItem ($id: ID!) {
   delItem(id: $id) {
     done
   }
@@ -77,6 +77,27 @@ export const CREATE_ORDER_MUTATION = gql`
   mutation createOrder($bill: [BillItem!]!) {
     createOrder(bill: $bill) {
       bill
+    }
+  }
+`;
+export const UPDATE_ITEM_PRICE_MUTATION = gql`
+  mutation UpdateItemPrice($id: ID!, $price: Int!) {
+    updateItemPrice(id: $id, price: $price) {
+      item {
+        id
+        price
+      }
+    }
+  }
+`;
+
+export const UPDATE_ITEM_STOCK_MUTATION = gql`
+  mutation UpdateItemStock($id: ID!, $stock: Int!) {
+    updateItemStock(id: $id, stock: $stock) {
+      item {
+        id
+        stock
+      }
     }
   }
 `;
